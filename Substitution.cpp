@@ -1,28 +1,29 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include "Lexer.h"
 using namespace std;
 using namespace chrono;
 //define Variable class
-class Variable {
+class vb {
 private:
     char name;
 public:
     //initialise input variable to property
-    Variable(char n) :name(n) {}
+    vb(char n) :name(n) {}
     //return name of variable
     char getName() { return name; }
 };
 //define Abstraction class
 class Abstraction {
 private:
-    Variable* bound;
+    vb* bound;
     string expression;
 public:
     //initialise input variables to properties
-    Abstraction(Variable* b, string e) :bound(b), expression(e) {}
+    Abstraction(vb* b, string e) :bound(b), expression(e) {}
     //return the variable pointer
-    Variable* getBoundVariable() { return bound; }
+    vb* getBoundVariable() { return bound; }
     //return the string expression
     string getExpression() { return expression; }
 };
@@ -55,24 +56,31 @@ public:
 int main()
 {
     //create variable 
-    Variable c = { 'c' };
+    vb c = { 'c' };
     Abstraction f1 = { &c,"c*a+4-b" };
     Application eq1 = { &f1,"5" };
 
-    Variable b = { 'b' };
+    vb b = { 'b' };
     Abstraction f2 = { &b,eq1.solve() };
     Application eq2 = { &f2,"1" };
 
-    Variable a = { 'a' };
+    vb a = { 'a' };
     Abstraction f3 = { &a,eq2.solve() };
     Application eq3 = { &f3,"4" };
 
     string solvedEq = eq3.solve();
 
-
-
     //output answer
     cout << solvedEq << endl;
+    std::cout << "\n";
+    //lexer
+
+    Lexer l;
+    l.tokenize("(LAMBDA a. LAMBDA b. b)");
+    l.printTokens();
+
+
+
 
 
 }
