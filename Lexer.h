@@ -24,7 +24,7 @@ public:
 	Token(TokenType tokentype, std::string val, std::string stype);
 	TokenType getType();
 	std::string getValue();
-	std::string getsType();
+	std::string getStringType();
 };
 
 class Lexer{

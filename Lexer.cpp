@@ -5,7 +5,7 @@
 Token::Token(TokenType tokentype, std::string val,std::string stype) :type(tokentype), value(val),stringType(stype) {}
 
 TokenType Token::getType() { return type; }
-std::string Token::getsType() { return stringType; }
+std::string Token::getStringType() { return stringType; }
 std::string Token::getValue() { return value; }
 
 Lexer::Lexer() {};
@@ -42,6 +42,6 @@ void Lexer::tokenize(const std::string input) {
 
 void Lexer::printTokens() {
 	for (Token t : tokens) {
-		std::cout << t.getsType() << "\n";
+		std::cout << t.getStringType() << "\n";
 	}
 }
