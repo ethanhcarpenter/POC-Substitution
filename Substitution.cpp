@@ -77,6 +77,7 @@ int main()
 
     Lexer l;
     l.tokenize("(LAMBDA a. LAMBDA b. b)");
+	l.lex();
     l.printTokens();
 
 

@@ -27,11 +27,35 @@ public:
 	std::string getStringType();
 };
 
-class Lexer{
+class Var {
 private:
+	std::string name;
+public:
+	void setName(char n);
+	char getName();
+};
+
+class Abs {
+private:
+	Abs* nextExpression=nullptr;
+	std::string finalExpression;
+	Var* boundVariable;
+public:
+	Abs* getNextExpression();
+	void setNextExpression(Abs* next);
+	bool hasNextExpression();
+	void setBoundVariable(Var* v);
+};
+
+class Lexer {
+private:
+	Abs* tree = new Abs;
 	std::vector<Token> tokens;
 public:
 	Lexer();
+	void lex();
 	void tokenize(const std::string input);
+	Abs* getLowestAbstraction();
+	Abs* getHighestAbstraction();
 	void printTokens();
 };
