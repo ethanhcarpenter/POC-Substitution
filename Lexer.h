@@ -7,12 +7,16 @@
 
 enum TokenType {
 	Lambda,
+	NumberLiteral,
 	OpenParenthesis,
 	CloseParenthesis,
+	OpenBrackets,
+	CloseBrackets,
 	Variable,
 	Expression,
-	NumberLiteral,
+	Comma,
 	Dot,
+	EndOfExpression,
 };
 
 class Token {
@@ -35,27 +39,54 @@ public:
 	char getName();
 };
 
-class Abs {
+class Abstraction {
 private:
-	Abs* nextExpression=nullptr;
-	std::string finalExpression;
+	Abstraction* nextExpression = nullptr;
+	std::string finalExpression="";
 	Var* boundVariable;
 public:
-	Abs* getNextExpression();
-	void setNextExpression(Abs* next);
+	Abstraction* getNextExpression();
+	void setNextExpression(Abstraction* next);
+	void addToFinalExpression(char c);
 	bool hasNextExpression();
 	void setBoundVariable(Var* v);
 };
 
+class Applicaption {
+private:
+	Abstraction expression;
+	std::string input;
+public:
+	Abstraction solve();
+};
+
 class Lexer {
 private:
-	Abs* tree = new Abs;
+	Abstraction* tree;
+	std::vector<std::string> inputs = {};
 	std::vector<Token> tokens;
 public:
 	Lexer();
 	void lex();
+	void apply();
 	void tokenize(const std::string input);
-	Abs* getLowestAbstraction();
-	Abs* getHighestAbstraction();
+	Abstraction* getLowestAbstraction();
+	Abstraction* getHighestAbstraction();
+	Token* browseFromCurrentToken(int tokenIndex, int forwards);
+	char tokenCharValue(int tokenIndex);
+	bool isFutureLambda(int tokenIndex);
+	std::vector<std::string>* getInputs();
+	void createNewInput();
+	void addtoLastInput(char c);
 	void printTokens();
+};
+
+class Parser {
+private:
+	Lexer* lexer = new Lexer;
+	std::string evaluatedValue = "";
+public:
+	Lexer* getLexer();
+	void evaluate();
+
 };

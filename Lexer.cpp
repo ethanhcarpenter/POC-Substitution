@@ -16,6 +16,7 @@ Lexer::Lexer() {};
 void Lexer::tokenize(const std::string input) {
 	std::string lambdaBuffer = "LAMBDA";
 	std::string variableBuffer = "";
+	std::string numberBuffer = "";
 	for (char c : input) {
 		if (std::isalpha(c)) {
 			variableBuffer += std::to_string(c);
@@ -30,61 +31,147 @@ void Lexer::tokenize(const std::string input) {
 			else { lambdaBuffer = "LAMBDA"; }
 
 		}
+		else if (std::isdigit(c)) {
+			numberBuffer += c;
+		}
 		else {
 			if (variableBuffer.size() > 0) {
 				tokens.push_back(Token(TokenType::Variable, variableBuffer, "Variable"));
 				variableBuffer = "";
 			}
+			if (numberBuffer.size() > 0) {
+				tokens.push_back(Token(TokenType::NumberLiteral, numberBuffer, "NumberLiteral"));
+				numberBuffer = "";
+			}
 		}
 		if (c == '(') { tokens.push_back(Token(TokenType::OpenParenthesis, std::to_string(c), "OpenParenthesis")); }
 		else if (c == ')') { tokens.push_back(Token(TokenType::CloseParenthesis, std::to_string(c), "CloseParenthesis")); }
+		else if (c == '[') { tokens.push_back(Token(TokenType::OpenBrackets, std::to_string(c), "OpenBrackets")); }
+		else if (c == ']') { tokens.push_back(Token(TokenType::CloseBrackets, std::to_string(c), "CloseBrackets")); }
 		else if (c == '.') { tokens.push_back(Token(TokenType::Dot, std::to_string(c), "Dot")); }
+		else if (c == ',') { tokens.push_back(Token(TokenType::Comma, std::to_string(c), "Comma")); }
 
 	}
+	if (variableBuffer.size() > 0) {
+		tokens.push_back(Token(TokenType::Variable, variableBuffer, "Variable"));
+		variableBuffer = "";
+	}
+	if (numberBuffer.size() > 0) {
+		tokens.push_back(Token(TokenType::NumberLiteral, numberBuffer, "NumberLiteral"));
+		numberBuffer = "";
+	}
+	lex();
 }
-Abs* Abs::getNextExpression() {
+Abstraction* Abstraction::getNextExpression() {
 	return nextExpression;
 }
-void Abs::setNextExpression(Abs* next) {
+void Abstraction::setNextExpression(Abstraction* next) {
 	nextExpression = next;
 }
-bool Abs::hasNextExpression() {
+bool Abstraction::hasNextExpression() {
 	return nextExpression != nullptr;
 }
-void Abs::setBoundVariable(Var* v) {
+void Abstraction::setBoundVariable(Var* v) {
 	boundVariable = v;
 }
-Abs* Lexer::getLowestAbstraction() {
-	Abs* lowestAbstraction = tree;
+Abstraction* Lexer::getLowestAbstraction() {
+	Abstraction* lowestAbstraction = tree;
 	while (lowestAbstraction->hasNextExpression()) {
 		lowestAbstraction = lowestAbstraction->getNextExpression();
 	}
 	return lowestAbstraction;
 }
+Abstraction* Lexer::getHighestAbstraction() { return tree; }
+void Abstraction::addToFinalExpression(char c) {
+	finalExpression += c;
+}
+Token* Lexer::browseFromCurrentToken(int tokenIndex, int forwards) {
+	if (tokenIndex + forwards >= tokens.size()) {
+		return new Token(TokenType::EndOfExpression, "", "EndOfExpression");
+	}
+	return &tokens[tokenIndex + forwards];
+
+}
+bool Lexer::isFutureLambda(int tokenIndex) {
+	for (int i = tokenIndex; i < tokens.size(); i++) {
+		if (browseFromCurrentToken(i, 1)->getType() == Lambda) { return true; }
+		return false;
+	}
+}
+char Lexer::tokenCharValue(int tokenIndex) {
+	std::string valueStr = tokens[tokenIndex].getValue();
+	char valueChar = static_cast<char>(std::stoi(valueStr));
+	return valueChar;
+}
+std::vector<std::string>* Lexer::getInputs() {
+	return &inputs;
+}
+void Lexer::createNewInput() {
+	inputs.push_back("");
+}
+void Lexer::addtoLastInput(char c) {
+	inputs.back() += c;
+}
+
+
 
 void Lexer::lex() {
 	int tokenIndex = 0;
 	for (Token t : tokens) {
+		if (t.getType() == OpenBrackets) { tree = new Abstraction; }
 		if (t.getType() == Lambda) {
-			int tempTokenIndex = tokenIndex + 1;
-			Abs* lowestAbstraction = getLowestAbstraction();
+			Abstraction* lowestAbstraction = getLowestAbstraction();
 			Var* newVariable = new Var();
-			std::string valueStr = tokens[tempTokenIndex].getValue();
-			char valueChar = static_cast<char>(std::stoi(valueStr));
-			newVariable->setName(valueChar);
+
+			newVariable->setName(tokenCharValue(tokenIndex + 1));
 			lowestAbstraction->setBoundVariable(newVariable);
-			lowestAbstraction->setNextExpression(new Abs);
+			lowestAbstraction->setNextExpression(new Abstraction);
+		}
+		if (t.getType() == Dot) {
+			if (!isFutureLambda(tokenIndex)) {
+				Abstraction* lowestAbstraction = getLowestAbstraction();
+				int tempTokenIndex = tokenIndex;
+				Token* nextToken = browseFromCurrentToken(tempTokenIndex, 1);
+				while (nextToken->getType() != CloseBrackets) {
+					tempTokenIndex++;
+					lowestAbstraction->addToFinalExpression(tokenCharValue(tempTokenIndex));
+					nextToken = browseFromCurrentToken(tempTokenIndex, 1);
+				}
+			}
+		}
+		if (t.getType() == CloseBrackets) {
+			int tempTokenIndex = tokenIndex;
+			Token* nextToken = browseFromCurrentToken(tempTokenIndex, 1);
+			while (nextToken->getType() != EndOfExpression) {
+				createNewInput();
+				while (nextToken->getType() != Comma && nextToken->getType() != EndOfExpression) {
+					tempTokenIndex++;
+					addtoLastInput(tokenCharValue(tempTokenIndex));
+					nextToken = browseFromCurrentToken(tempTokenIndex, 1);
+				}
+				tempTokenIndex++;
+				nextToken = browseFromCurrentToken(tempTokenIndex, 1);
+			}
 		}
 		tokenIndex++;
 	}
 	int a = 12;
 }
-
-
-
 void Lexer::printTokens() {
 
 	for (Token t : tokens) {
 		std::cout << t.getStringType() << "\n";
 	}
+}
+
+Lexer* Parser::getLexer() {
+	return lexer;
+}
+
+void Parser::evaluate() {
+	Abstraction* expression = lexer->getHighestAbstraction();
+	std::vector<std::string>* inputs = lexer->getInputs();
+
+
+
 }
