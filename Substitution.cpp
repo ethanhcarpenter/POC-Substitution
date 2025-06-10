@@ -73,12 +73,14 @@ using namespace chrono;
 //std::cout << "\n";
 ////lexer
 int main()
-{
-    std::string expression = "[LAMBDA a. LAMBDA b. a b]12,13";
+{//{LAMBDA g. LAMBDA x. g x}
+    std::string expression = "[LAMBDA n. LAMBDA f. LAMBDA x. f(n f x)]abcedf";
 
     Parser parser = {};
     parser.getLexer()->tokenize(expression);
-
+    parser.evaluate();
+    
+    int a = 12;
 
 
 

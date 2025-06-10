@@ -4,11 +4,14 @@
 #include <vector>
 #include <algorithm>
 #include <cctype>
+#include <regex>
 
 enum TokenType {
 	Lambda,
 	NumberLiteral,
 	OpenParenthesis,
+	OpenBraces,
+	CloseBraces,
 	CloseParenthesis,
 	OpenBrackets,
 	CloseBrackets,
@@ -48,7 +51,10 @@ public:
 	Abstraction* getNextExpression();
 	void setNextExpression(Abstraction* next);
 	void addToFinalExpression(char c);
+	void setFinalExpression(std::string expression);
+	std::string getFinalExpression();
 	bool hasNextExpression();
+	Var* getBoundVariable();
 	void setBoundVariable(Var* v);
 };
 
@@ -77,7 +83,8 @@ public:
 	bool isFutureLambda(int tokenIndex);
 	std::vector<std::string>* getInputs();
 	void createNewInput();
-	void addtoLastInput(char c);
+	void addCharToLastInput(char c);
+	void addStringToLastInput(std::string s);
 	void printTokens();
 };
 
@@ -87,6 +94,8 @@ private:
 	std::string evaluatedValue = "";
 public:
 	Lexer* getLexer();
-	void evaluate();
+	void evaluate(int depth=0);
+	std::string substitute(std::string expression, std::string var, std::string replace);
+	void logEvents();
 
 };

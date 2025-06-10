@@ -48,6 +48,8 @@ void Lexer::tokenize(const std::string input) {
 		else if (c == ')') { tokens.push_back(Token(TokenType::CloseParenthesis, std::to_string(c), "CloseParenthesis")); }
 		else if (c == '[') { tokens.push_back(Token(TokenType::OpenBrackets, std::to_string(c), "OpenBrackets")); }
 		else if (c == ']') { tokens.push_back(Token(TokenType::CloseBrackets, std::to_string(c), "CloseBrackets")); }
+		else if (c == '{') { tokens.push_back(Token(TokenType::OpenBraces, std::to_string(c), "OpenBraces")); }
+		else if (c == '}') { tokens.push_back(Token(TokenType::CloseBraces, std::to_string(c), "CloseBraces")); }
 		else if (c == '.') { tokens.push_back(Token(TokenType::Dot, std::to_string(c), "Dot")); }
 		else if (c == ',') { tokens.push_back(Token(TokenType::Comma, std::to_string(c), "Comma")); }
 
@@ -73,6 +75,15 @@ bool Abstraction::hasNextExpression() {
 }
 void Abstraction::setBoundVariable(Var* v) {
 	boundVariable = v;
+}
+void Abstraction::setFinalExpression(std::string expression) {
+	finalExpression = expression;
+}
+std::string Abstraction::getFinalExpression() {
+	return finalExpression;
+}
+Var* Abstraction::getBoundVariable() {
+	return boundVariable;
 }
 Abstraction* Lexer::getLowestAbstraction() {
 	Abstraction* lowestAbstraction = tree;
@@ -109,10 +120,14 @@ std::vector<std::string>* Lexer::getInputs() {
 void Lexer::createNewInput() {
 	inputs.push_back("");
 }
-void Lexer::addtoLastInput(char c) {
+void Lexer::addCharToLastInput(char c) {
+	inputs.back() += " ";
 	inputs.back() += c;
 }
-
+void Lexer::addStringToLastInput(std::string s) {
+	inputs.back() += " ";
+	inputs.back() += s;
+}
 
 
 void Lexer::lex() {
@@ -146,7 +161,13 @@ void Lexer::lex() {
 				createNewInput();
 				while (nextToken->getType() != Comma && nextToken->getType() != EndOfExpression) {
 					tempTokenIndex++;
-					addtoLastInput(tokenCharValue(tempTokenIndex));
+					if (nextToken->getType() == Lambda||nextToken->getType()==Variable) {
+						addStringToLastInput(nextToken->getValue());
+					}
+					else {
+						char c = tokenCharValue(tempTokenIndex);
+						addCharToLastInput(c);
+					}
 					nextToken = browseFromCurrentToken(tempTokenIndex, 1);
 				}
 				tempTokenIndex++;
@@ -167,11 +188,31 @@ void Lexer::printTokens() {
 Lexer* Parser::getLexer() {
 	return lexer;
 }
+void Parser::logEvents() {
 
-void Parser::evaluate() {
+}
+std::string Parser::substitute(std::string expression, std::string var, std::string replace) {
+	int pos = expression.find(var);
+	while (pos != std::string::npos) {
+		expression.replace(pos, var.size(), replace);
+		pos = expression.find(var, pos + replace.size());
+	}
+	return expression;
+}
+
+void Parser::evaluate(int depth) {
 	Abstraction* expression = lexer->getHighestAbstraction();
 	std::vector<std::string>* inputs = lexer->getInputs();
+	if (expression->getFinalExpression() == "") {
+		for (int i = 0; i < depth; i++) { expression = expression->getNextExpression(); }
+	}
+	Var* var = expression->getBoundVariable();
+	std::string input = inputs->at(depth);
+	evaluatedValue = lexer->getLowestAbstraction()->getFinalExpression();
+	evaluatedValue = substitute(evaluatedValue, std::string(1, var->getName()), input);
+	lexer->getLowestAbstraction()->setFinalExpression(evaluatedValue);
 
-
-
+	if (expression->getNextExpression()->getFinalExpression() == "") {
+		evaluate(depth + 1);
+	}
 }
