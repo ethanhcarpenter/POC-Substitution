@@ -73,17 +73,25 @@ using namespace chrono;
 //std::cout << "\n";
 ////lexer
 int main()
-{//{LAMBDA g. LAMBDA x. g x}
-    std::string expression = "[LAMBDA n. LAMBDA f. LAMBDA x. f(n f x)]abcedf";
+{
+    //Rules
+    // 
+    //{LAMBDA g. LAMBDA x. g x}
+
+    
+    std::string expression = "[LAMBDA m.LAMBDA n. CHURCH f. CHURCH x. m,f,(n,f,x)]{CHURCH f. CHURCH x. f( x)},{CHURCH f. CHURCH x. f(f x)}";
+    //std::string expression = "[LAMBDA n. CHURCH f. CHURCH x. f(n,f,x)]{CHURCH f. CHURCH x. f(f(f(f(f(f x)))))}";
 
     Parser parser = {};
-    parser.getLexer()->tokenize(expression);
-    parser.evaluate();
+   
+    parser.evaluate(0,expression);
+
+	std::cout << "Evaluated Value: " << parser.getFinalExpression() << std::endl;
     
     int a = 12;
-
-
-
+    
+    /*string s(1, 'c');
+	printf("The character is: %s\n", s.c_str());*/
 
 
 }

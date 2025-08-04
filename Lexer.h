@@ -5,9 +5,11 @@
 #include <algorithm>
 #include <cctype>
 #include <regex>
+#include <map>
 
 enum TokenType {
 	Lambda,
+	Church,
 	NumberLiteral,
 	OpenParenthesis,
 	OpenBraces,
@@ -38,8 +40,8 @@ class Var {
 private:
 	std::string name;
 public:
-	void setName(char n);
-	char getName();
+	void setName(std::string n);
+	std::string getName();
 };
 
 class Abstraction {
@@ -50,7 +52,7 @@ private:
 public:
 	Abstraction* getNextExpression();
 	void setNextExpression(Abstraction* next);
-	void addToFinalExpression(char c);
+	void addToFinalExpression(std::string c);
 	void setFinalExpression(std::string expression);
 	std::string getFinalExpression();
 	bool hasNextExpression();
@@ -68,6 +70,8 @@ public:
 
 class Lexer {
 private:
+	std::string stringForm;
+	std::string preLambdaReserve = "";
 	Abstraction* tree;
 	std::vector<std::string> inputs = {};
 	std::vector<Token> tokens;
@@ -75,27 +79,40 @@ public:
 	Lexer();
 	void lex();
 	void apply();
-	void tokenize(const std::string input);
+	std::vector<Token> getTokens();
+	void tokenize(const std::string input,bool justTokens=false);
 	Abstraction* getLowestAbstraction();
 	Abstraction* getHighestAbstraction();
+	void setHighestAbstraction(Abstraction* newHighest);
 	Token* browseFromCurrentToken(int tokenIndex, int forwards);
-	char tokenCharValue(int tokenIndex);
+	std::string tokenStringValue(int tokenIndex);
 	bool isFutureLambda(int tokenIndex);
 	std::vector<std::string>* getInputs();
+	void overrideInput(std::string input,int depth);
 	void createNewInput();
-	void addCharToLastInput(char c);
 	void addStringToLastInput(std::string s);
 	void printTokens();
+	void replaceVariableNames(int depth);
+	void updateStringForm(int depth=-1);
+	std::string getStringForm();
+	std::string getPreLambdaReserve();
+	void setPreLambdaReserve(std::string reserve);
+	void addStringToPreLambdaReserve(std::string reserve);
+	void removeTopLevelBrackets();
 };
 
 class Parser {
 private:
-	Lexer* lexer = new Lexer;
-	std::string evaluatedValue = "";
+	Lexer* lexer=new Lexer;
+	std::vector<std::vector<std::map<std::string, std::string>>> correspondingVariableNames;
+	std::string finalExpression = "";
 public:
 	Lexer* getLexer();
-	void evaluate(int depth=0);
-	std::string substitute(std::string expression, std::string var, std::string replace);
+    void evaluate(int inputRecurse =0,std::string expression="");
+	static std::string betaReduce(std::string expression, std::string var, std::string replace);
+	std::tuple<std::string, Lexer> alphaReduce(std::string input, int inputRecurse, int depth);
 	void logEvents();
+	std::string getFinalExpression();
+	void cleanupFinalExpression();
 
 };
